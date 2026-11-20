@@ -43,6 +43,30 @@ function calcularEstadisticas(reportes) {
     .sort()
     .map((mes) => ({ mes, total: meses[mes] }));
 
+  const franjas = contarPor(publicos, (r) => franjaHoraria(r.fechaHora));
+  const porFranja = Object.keys(FRANJAS).map((f) => ({
+    franja: f,
+    etiqueta: FRANJAS[f].etiqueta,
+    total: franjas[f] || 0,
+  }));
+  const franjaMasPeligrosa = publicos.length
+    ? porFranja.reduce((a, b) => (b.total > a.total ? b : a)).franja
+    : null;
+
+  const zonas = contarPor(publicos, (r) => r.zona);
+  const topZonas = Object.entries(zonas)
+    .map(([zona, total]) => {
+      const pts = publicos.filter((r) => r.zona === zona);
+      return {
+        zona,
+        total,
+        lat: pts.reduce((a, r) => a + r.lat, 0) / pts.length,
+        lng: pts.reduce((a, r) => a + r.lng, 0) / pts.length,
+      };
+    })
+    .sort((a, b) => b.total - a.total || a.zona.localeCompare(b.zona))
+    .slice(0, 5);
+
   return {
     totales: {
       reportes: reportes.length,
@@ -54,6 +78,9 @@ function calcularEstadisticas(reportes) {
     },
     porTipo,
     porMes,
+    porFranja,
+    franjaMasPeligrosa,
+    topZonas,
   };
 }
 

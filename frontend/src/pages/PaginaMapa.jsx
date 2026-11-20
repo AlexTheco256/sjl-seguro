@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { CircleMarker, Popup } from 'react-leaflet';
 import { api } from '../api.js';
-import { CapaCalor, MapaBase } from '../components/Mapa.jsx';
+import { CapaCalor, MapaBase, Recentrar } from '../components/Mapa.jsx';
 import { Aviso } from '../components/Ui.jsx';
 import { COLORES_TIPO, FRANJAS, TIPOS, formatoFecha, puntosCalor } from '../util.js';
 
 /** Mapa público de zonas de riesgo con filtros (HU09–HU12). */
 export default function PaginaMapa() {
+  const [params] = useSearchParams();
   const [tipos, setTipos] = useState([]);
   const [franjas, setFranjas] = useState([]);
   const [verCalor, setVerCalor] = useState(true);
@@ -15,6 +16,12 @@ export default function PaginaMapa() {
   const [datos, setDatos] = useState({ incidentes: [], total: 0 });
   const [error, setError] = useState('');
   const [cargando, setCargando] = useState(true);
+
+  const enfoque = useMemo(() => {
+    const lat = Number(params.get('lat'));
+    const lng = Number(params.get('lng'));
+    return lat && lng ? [lat, lng] : null;
+  }, [params]);
 
   useEffect(() => {
     const q = new URLSearchParams();
@@ -107,6 +114,7 @@ export default function PaginaMapa() {
 
       <section className="contenedor-mapa">
         <MapaBase>
+          {enfoque && <Recentrar centro={enfoque} zoom={15} />}
           {verCalor && puntos.length > 0 && <CapaCalor puntos={puntos} />}
           {verPuntos &&
             datos.incidentes.map((i) => (
