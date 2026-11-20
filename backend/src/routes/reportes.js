@@ -1,6 +1,7 @@
 'use strict';
 
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const { asincrono } = require('./util');
 const { validarReporte, zonaMasCercana, franjaHoraria, esCritico } = require('../domain/reportes');
 const { ErrorApp } = require('../errores');
@@ -10,16 +11,30 @@ const { erroresZod } = require('../middleware/errores');
 module.exports = function rutasReportes(repo, { limites = true } = {}) {
   const r = express.Router();
 
+  // HU07 – máximo 5 reportes por minuto por IP para evitar spam.
+  const limiteReportes = limites
+    ? rateLimit({
+        windowMs: 60 * 1000,
+        limit: 5,
+        standardHeaders: 'draft-7',
+        legacyHeaders: false,
+        message: { error: 'Has enviado demasiados reportes. Espera un minuto e inténtalo de nuevo.' },
+      })
+    : (_q, _s, n) => n();
+
   // HU05, HU06, HU07 – registrar reporte (identificado o anónimo)
   r.post(
     '/',
+    limiteReportes,
     asincrono(async (req, res) => {
       const resultado = validarReporte(req.body);
       if (!resultado.success) {
         throw new ErrorApp(400, 'Datos inválidos', erroresZod(resultado.error));
       }
       const datos = resultado.data;
-      if (!req.usuario) throw new ErrorApp(401, 'Debes iniciar sesión para reportar');
+      if (!req.usuario && !datos.anonimo) {
+        throw new ErrorApp(401, 'Inicia sesión o marca la opción "Reportar de forma anónima"');
+      }
       const reporte = await repo.crearReporte({
         tipo: datos.tipo,
         descripcion: datos.descripcion,
