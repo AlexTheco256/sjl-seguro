@@ -142,6 +142,8 @@ export default function PaginaBandeja() {
   const [datos, setDatos] = useState(null);
   const [sel, setSel] = useState(null);
   const [error, setError] = useState('');
+  const [nuevasAlertas, setNuevasAlertas] = useState(0);
+  const conocidas = useRef(null);
 
   const cargar = useCallback(() => {
     const q = new URLSearchParams({ pagina, porPagina: 20 });
@@ -156,6 +158,27 @@ export default function PaginaBandeja() {
 
   useEffect(() => {
     cargar();
+  }, [cargar]);
+
+  // HU16 – consulta periódica de reportes críticos nuevos (cada 15 s)
+  useEffect(() => {
+    const revisar = () =>
+      api('/serenazgo/alertas')
+        .then((r) => {
+          const ids = new Set(r.alertas.map((a) => a.id));
+          if (conocidas.current) {
+            const nuevas = [...ids].filter((x) => !conocidas.current.has(x)).length;
+            if (nuevas > 0) {
+              setNuevasAlertas((n) => n + nuevas);
+              cargar();
+            }
+          }
+          conocidas.current = ids;
+        })
+        .catch(() => {});
+    revisar();
+    const t = setInterval(revisar, 15000);
+    return () => clearInterval(t);
   }, [cargar]);
 
   return (
@@ -184,6 +207,19 @@ export default function PaginaBandeja() {
         </div>
       </div>
 
+      {nuevasAlertas > 0 && (
+        <div className="alerta-critica" role="alert">
+          🚨 {nuevasAlertas} nuevo(s) reporte(s) crítico(s) (asalto en transporte o extorsión).
+          <button className="enlace" onClick={() => setNuevasAlertas(0)}>
+            Entendido
+          </button>
+        </div>
+      )}
+      {datos?.pendientesCriticos > 0 && (
+        <Aviso tipo="error">
+          Hay <strong>{datos.pendientesCriticos}</strong> reporte(s) crítico(s) pendientes de validar.
+        </Aviso>
+      )}
       <Aviso tipo="error">{error}</Aviso>
 
       <div className="bandeja">
