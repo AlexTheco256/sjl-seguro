@@ -69,6 +69,33 @@ export default function PaginaPanel() {
               <h2>Tendencia mensual</h2>
               <Tendencia datos={datos.porMes} />
             </article>
+            <article className="caja">
+              <h2>Zonas críticas (top 5)</h2>
+              {datos.topZonas.length === 0 ? (
+                <p className="vacio">Sin datos.</p>
+              ) : (
+                <ol className="ranking">
+                  {datos.topZonas.map((z) => (
+                    <li key={z.zona}>
+                      <Link to={`/?lat=${z.lat.toFixed(5)}&lng=${z.lng.toFixed(5)}`}>{z.zona}</Link>
+                      <span>{z.total} incidentes</span>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </article>
+            <article className="caja">
+              <h2>Incidentes por franja horaria</h2>
+              <Barras
+                datos={datos.porFranja.map((x) => ({ clave: x.franja, etiqueta: x.etiqueta, valor: x.total }))}
+                resaltar={datos.franjaMasPeligrosa}
+              />
+              {datos.franjaMasPeligrosa && (
+                <p className="sub">
+                  Franja más peligrosa: <strong>{FRANJAS[datos.franjaMasPeligrosa]}</strong>
+                </p>
+              )}
+            </article>
           </div>
         </>
       )}
