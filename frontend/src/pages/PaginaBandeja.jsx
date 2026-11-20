@@ -84,6 +84,34 @@ function Detalle({ id, onCambio }) {
         <CircleMarker center={[r.lat, r.lng]} radius={9} pathOptions={{ color: '#fff', weight: 2, fillColor: '#dc2626', fillOpacity: 1 }} />
       </MapaBase>
 
+      {acciones.length > 0 && (
+        <div className="acciones">
+          {acciones.map((a) => (
+            <button
+              key={a}
+              className={`btn ${a === 'descartado' ? 'peligro' : 'primario'} chico`}
+              onClick={() => (pideTexto[a] ? (setAccion(a), setTexto('')) : aplicar(a))}
+            >
+              {ETIQUETA_ACCION[a]}
+            </button>
+          ))}
+        </div>
+      )}
+      {accion && (
+        <div className="confirmar">
+          <Campo etiqueta={pideTexto[accion]}>
+            <input value={texto} onChange={(e) => setTexto(e.target.value)} maxLength={300} autoFocus />
+          </Campo>
+          <div className="acciones">
+            <button className="btn primario chico" onClick={() => aplicar(accion)}>
+              Confirmar
+            </button>
+            <button className="btn secundario chico" onClick={() => setAccion(null)}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
       <Aviso tipo="error">{error}</Aviso>
 
       <h3>Historial</h3>
