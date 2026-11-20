@@ -8,6 +8,7 @@ import { COLORES_TIPO, FRANJAS, TIPOS, formatoFecha, puntosCalor } from '../util
 
 /** Mapa público de zonas de riesgo con filtros (HU09–HU12). */
 export default function PaginaMapa() {
+  const [tipos, setTipos] = useState([]);
   const [verCalor, setVerCalor] = useState(true);
   const [verPuntos, setVerPuntos] = useState(true);
   const [datos, setDatos] = useState({ incidentes: [], total: 0 });
@@ -16,6 +17,7 @@ export default function PaginaMapa() {
 
   useEffect(() => {
     const q = new URLSearchParams();
+    if (tipos.length) q.set('tipos', tipos.join(','));
     setCargando(true);
     api(`/incidentes?${q}`)
       .then((r) => {
@@ -24,9 +26,12 @@ export default function PaginaMapa() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setCargando(false));
-  }, []);
+  }, [tipos]);
 
   const puntos = useMemo(() => puntosCalor(datos.incidentes), [datos]);
+  const alternar = (lista, setLista, valor) =>
+    setLista(lista.includes(valor) ? lista.filter((v) => v !== valor) : [...lista, valor]);
+
   return (
     <div className="layout-mapa">
       <aside className="panel-lateral">
@@ -37,6 +42,17 @@ export default function PaginaMapa() {
         </p>
 
         <fieldset>
+          <legend>Tipo de delito</legend>
+          {Object.entries(TIPOS).map(([k, v]) => (
+            <label key={k} className="check">
+              <input type="checkbox" checked={tipos.includes(k)} onChange={() => alternar(tipos, setTipos, k)} />
+              <span className="punto-color" style={{ background: COLORES_TIPO[k] }} />
+              {v}
+            </label>
+          ))}
+        </fieldset>
+
+        <fieldset>
           <legend>Capas</legend>
           <label className="check">
             <input type="checkbox" checked={verCalor} onChange={() => setVerCalor(!verCalor)} /> Mapa de calor
@@ -45,6 +61,17 @@ export default function PaginaMapa() {
             <input type="checkbox" checked={verPuntos} onChange={() => setVerPuntos(!verPuntos)} /> Incidentes
           </label>
         </fieldset>
+
+        {tipos.length > 0 && (
+          <button
+            className="btn secundario"
+            onClick={() => {
+              setTipos([]);
+            }}
+          >
+            Limpiar filtros
+          </button>
+        )}
 
         <p className="contador" aria-live="polite">
           {cargando ? 'Cargando…' : `${datos.total} incidentes en el mapa`}
