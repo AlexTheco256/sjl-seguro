@@ -20,7 +20,7 @@ export default function PaginaReportar() {
   const [centrar, setCentrar] = useState(null);
   const [errores, setErrores] = useState({});
   const [estado, setEstado] = useState({ enviando: false, exito: null, error: '' });
-  const anonimo = false;
+  const anonimo = !usuario || form.anonimo;
 
   const cambiar = (campo) => (e) =>
     setForm({ ...form, [campo]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
@@ -129,9 +129,15 @@ export default function PaginaReportar() {
               placeholder="Ej.: Dos sujetos en moto robaron un celular en el paradero de la av. Próceres."
             />
           </Campo>
-          {!usuario && (
-            <Aviso tipo="error">
-              Debes <Link to="/login">iniciar sesión</Link> para enviar un reporte.
+          {usuario ? (
+            <label className="check">
+              <input type="checkbox" checked={form.anonimo} onChange={cambiar('anonimo')} /> Reportar de forma
+              anónima (tu nombre no se mostrará a nadie)
+            </label>
+          ) : (
+            <Aviso>
+              No has iniciado sesión: el reporte se enviará de forma <strong>anónima</strong>.{' '}
+              <Link to="/login">Ingresa</Link> para hacer seguimiento.
             </Aviso>
           )}
           <Aviso tipo="error">{estado.error}</Aviso>
