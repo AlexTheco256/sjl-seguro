@@ -1,0 +1,27 @@
+# Blueprint de Render (Infraestructura como código).
+# El despliegue NO es automático: lo dispara el pipeline de GitHub Actions
+# (Deploy Hook) solo cuando build, pruebas y controles de seguridad pasan en main.
+services:
+  - type: web
+    name: sjl-seguro
+    runtime: docker
+    plan: free
+    region: oregon
+    branch: main
+    dockerfilePath: ./Dockerfile
+    autoDeploy: false
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PUBLIC_URL
+        sync: false
+      # Credenciales de Supabase: se cargan en el panel de Render (nunca en el repositorio).
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
