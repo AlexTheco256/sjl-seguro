@@ -1,0 +1,48 @@
+'use strict';
+
+const express = require('express');
+const rateLimit = require('express-rate-limit');
+const { z } = require('zod');
+const { asincrono } = require('./util');
+const { sanitizarTexto } = require('../domain/texto');
+
+const esquemaRegistro = z.object({
+  nombre: z
+    .string({ error: 'El nombre es obligatorio' })
+    .transform(sanitizarTexto)
+    .pipe(z.string().min(2, 'El nombre debe tener al menos 2 caracteres').max(80)),
+  email: z.string({ error: 'El correo es obligatorio' }).trim().toLowerCase().pipe(z.email('Correo no válido')),
+  password: z
+    .string({ error: 'La contraseña es obligatoria' })
+    .min(8, 'La contraseña debe tener al menos 8 caracteres')
+    .max(72, 'La contraseña no puede superar los 72 caracteres')
+    .regex(/[A-Za-z]/, 'La contraseña debe incluir al menos una letra')
+    .regex(/\d/, 'La contraseña debe incluir al menos un número'),
+});
+
+module.exports = function rutasAuth(repo, { limites = true } = {}) {
+  const r = express.Router();
+  // Limita intentos de fuerza bruta sobre credenciales.
+  const limiteCredenciales = limites
+    ? rateLimit({
+        windowMs: 15 * 60 * 1000,
+        limit: 20,
+        standardHeaders: 'draft-7',
+        legacyHeaders: false,
+        message: { error: 'Demasiados intentos. Intenta nuevamente en unos minutos.' },
+      })
+    : (_q, _s, n) => n();
+
+  // HU01 – Registro de ciudadano
+  r.post(
+    '/registro',
+    limiteCredenciales,
+    asincrono(async (req, res) => {
+      const datos = esquemaRegistro.parse(req.body);
+      const usuario = await repo.registrar(datos);
+      res.status(201).json({ mensaje: 'Cuenta creada correctamente', usuario });
+    }),
+  );
+
+  return r;
+};
