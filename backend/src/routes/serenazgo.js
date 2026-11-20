@@ -14,10 +14,15 @@ const esquemaCambio = z
   .object({
     estado: z.enum(Object.keys(ESTADOS), { error: 'Estado no válido' }),
     motivo: texto(300),
+    nota: texto(500),
+    unidad: texto(60),
   })
   .superRefine((c, ctx) => {
     if (c.estado === 'descartado' && !c.motivo) {
       ctx.addIssue({ code: 'custom', path: ['motivo'], message: 'Indica el motivo del descarte' });
+    }
+    if (c.estado === 'atendido' && !c.nota) {
+      ctx.addIssue({ code: 'custom', path: ['nota'], message: 'Agrega una nota de cierre' });
     }
   });
 
@@ -86,13 +91,18 @@ module.exports = function rutasSerenazgo(repo) {
       }
       const datos = { estado: cambio.estado };
       if (cambio.estado === 'descartado') datos.motivo = cambio.motivo;
+      if (cambio.estado === 'en_atencion' && cambio.unidad) datos.unidad = cambio.unidad;
+      if (cambio.estado === 'atendido') {
+        datos.nota = cambio.nota;
+        datos.atendidoEn = new Date().toISOString();
+      }
       const actualizado = await repo.actualizarReporte(reporte.id, datos);
       await repo.registrarHistorial({
         reporteId: reporte.id,
         usuarioId: req.usuario.id,
         desde: reporte.estado,
         hacia: cambio.estado,
-        nota: cambio.motivo || null,
+        nota: cambio.motivo || cambio.nota || cambio.unidad || null,
       });
       res.json({ mensaje: `Reporte ${actualizado.codigo}: ${ESTADOS[cambio.estado]}`, reporte: vistaSerenazgo(actualizado) });
     }),

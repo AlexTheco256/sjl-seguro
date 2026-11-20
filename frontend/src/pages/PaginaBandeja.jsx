@@ -8,6 +8,8 @@ import { ESTADOS, TIPOS, accionesDisponibles, formatoFecha } from '../util.js';
 const ETIQUETA_ACCION = {
   validado: 'Validar',
   descartado: 'Descartar',
+  en_atencion: 'Poner en atención',
+  atendido: 'Marcar atendido',
 };
 
 function Detalle({ id, onCambio }) {
@@ -32,6 +34,8 @@ function Detalle({ id, onCambio }) {
   const aplicar = async (estado) => {
     const cuerpo = { estado };
     if (estado === 'descartado') cuerpo.motivo = texto;
+    if (estado === 'atendido') cuerpo.nota = texto;
+    if (estado === 'en_atencion' && texto) cuerpo.unidad = texto;
     try {
       await api(`/serenazgo/reportes/${id}/estado`, { metodo: 'PATCH', cuerpo });
       setAccion(null);
@@ -45,8 +49,8 @@ function Detalle({ id, onCambio }) {
 
   if (!det) return <div className="detalle">{error ? <Aviso tipo="error">{error}</Aviso> : 'Cargando…'}</div>;
   const r = det.reporte;
-  const acciones = accionesDisponibles(r.estado).filter((a) => a === 'validado' || a === 'descartado');
-  const pideTexto = { descartado: 'Motivo del descarte' };
+  const acciones = accionesDisponibles(r.estado);
+  const pideTexto = { descartado: 'Motivo del descarte', atendido: 'Nota de cierre', en_atencion: 'Unidad asignada (opcional)' };
 
   return (
     <div className="detalle">
