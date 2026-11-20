@@ -67,6 +67,7 @@ function crearApp({ repo, origenesCors = [], dirEstatico, limites = true, versio
     res.json({ estado: 'ok', servicio: 'sjl-seguro-api', version, commit, modo: repo.modo, hora: new Date().toISOString() });
   });
 
+  app.use('/api/auth', require('./routes/auth')(repo, { limites }));
   app.use('/api', noEncontrado);
 
   // Frontend compilado (React) servido por el mismo servicio.
