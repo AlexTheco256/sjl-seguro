@@ -24,11 +24,32 @@ function RutaProtegida({ roles, children }) {
   return children;
 }
 
+/** Contador de alertas críticas para el menú de serenazgo (HU16). */
+function useAlertas(activo) {
+  const [total, setTotal] = useState(0);
+  useEffect(() => {
+    if (!activo) return undefined;
+    let vivo = true;
+    const consultar = () =>
+      api('/serenazgo/alertas')
+        .then((r) => vivo && setTotal(r.total))
+        .catch(() => {});
+    consultar();
+    const id = setInterval(consultar, 15000);
+    return () => {
+      vivo = false;
+      clearInterval(id);
+    };
+  }, [activo]);
+  return total;
+}
+
 export default function App() {
   const { usuario, cerrarSesion } = useAuth();
   const [menu, setMenu] = useState(false);
   const ubicacion = useLocation();
   const esStaff = usuario && ['serenazgo', 'administrador'].includes(usuario.rol);
+  const alertas = useAlertas(esStaff);
 
   useEffect(() => setMenu(false), [ubicacion.pathname]);
 
@@ -52,7 +73,7 @@ export default function App() {
           {usuario && <NavLink to="/mis-reportes">Mis reportes</NavLink>}
           {esStaff && (
             <NavLink to="/serenazgo">
-              Bandeja
+              Bandeja {alertas > 0 && <span className="insignia" title="Reportes críticos sin atender">{alertas}</span>}
             </NavLink>
           )}
           {usuario ? (

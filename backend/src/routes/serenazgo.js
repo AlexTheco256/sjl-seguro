@@ -28,7 +28,7 @@ const esquemaCambio = z
 
 /** Orden de la bandeja: críticos pendientes, luego pendientes, luego el resto; más recientes primero (HU13, HU16). */
 function prioridad(r) {
-  if (r.estado === 'recibido') return 1;
+  if (r.estado === 'recibido') return esCritico(r.tipo) ? 0 : 1;
   if (r.estado === 'validado' || r.estado === 'en_atencion') return 2;
   return 3;
 }
@@ -60,8 +60,19 @@ module.exports = function rutasSerenazgo(repo) {
         total: todos.length,
         pagina,
         paginas,
+        pendientesCriticos: todos.filter((x) => x.estado === 'recibido' && esCritico(x.tipo)).length,
         items: items.map((x) => vistaSerenazgo(x, mapa.get(x.usuarioId))),
       });
+    }),
+  );
+
+  // HU16 – alertas de reportes críticos sin atender (polling desde la bandeja)
+  r.get(
+    '/alertas',
+    asincrono(async (_req, res) => {
+      const pendientes = await repo.listarReportes({ estados: ['recibido'] });
+      const criticos = pendientes.filter((x) => esCritico(x.tipo));
+      res.json({ total: criticos.length, alertas: criticos.map((x) => vistaSerenazgo(x)) });
     }),
   );
 
