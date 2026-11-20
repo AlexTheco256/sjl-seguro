@@ -2,7 +2,7 @@
 # Imagen de producción de SJL Seguro: frontend React compilado + API Express.
 
 # ---------- 1) Compilación del frontend ----------
-FROM node:22-alpine AS web
+FROM node:26-alpine AS web
 WORKDIR /app/frontend
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -10,13 +10,13 @@ COPY frontend/ ./
 RUN npm run build
 
 # ---------- 2) Dependencias de producción de la API ----------
-FROM node:22-alpine AS api
+FROM node:26-alpine AS api
 WORKDIR /app/backend
 COPY backend/package.json backend/package-lock.json ./
 RUN npm ci --omit=dev --no-audit --no-fund
 
 # ---------- 3) Imagen final mínima ----------
-FROM node:22-alpine
+FROM node:26-alpine
 ENV NODE_ENV=production \
     PORT=3000 \
     STATIC_DIR=/app/frontend/dist
