@@ -25,10 +25,12 @@ module.exports = function rutasIncidentes(repo) {
     '/',
     asincrono(async (req, res) => {
       const tipos = listaParametro(req.query.tipos, Object.keys(TIPOS));
+      const franjas = listaParametro(req.query.franjas, Object.keys(FRANJAS));
       const lista = await repo.listarReportes({ estados: ESTADOS_PUBLICOS });
       const incidentes = filtrarPorRango(lista, fechaParametro(req.query.desde), fechaParametro(req.query.hasta))
         .filter((x) => !tipos || tipos.includes(x.tipo))
-        .map(vistaPublica);
+        .map(vistaPublica)
+        .filter((x) => !franjas || franjas.includes(x.franja));
       res.set('Cache-Control', 'public, max-age=30');
       res.json({ total: incidentes.length, incidentes });
     }),

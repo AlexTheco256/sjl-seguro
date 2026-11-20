@@ -9,6 +9,7 @@ import { COLORES_TIPO, FRANJAS, TIPOS, formatoFecha, puntosCalor } from '../util
 /** Mapa público de zonas de riesgo con filtros (HU09–HU12). */
 export default function PaginaMapa() {
   const [tipos, setTipos] = useState([]);
+  const [franjas, setFranjas] = useState([]);
   const [verCalor, setVerCalor] = useState(true);
   const [verPuntos, setVerPuntos] = useState(true);
   const [datos, setDatos] = useState({ incidentes: [], total: 0 });
@@ -18,6 +19,7 @@ export default function PaginaMapa() {
   useEffect(() => {
     const q = new URLSearchParams();
     if (tipos.length) q.set('tipos', tipos.join(','));
+    if (franjas.length) q.set('franjas', franjas.join(','));
     setCargando(true);
     api(`/incidentes?${q}`)
       .then((r) => {
@@ -26,7 +28,7 @@ export default function PaginaMapa() {
       })
       .catch((e) => setError(e.message))
       .finally(() => setCargando(false));
-  }, [tipos]);
+  }, [tipos, franjas]);
 
   const puntos = useMemo(() => puntosCalor(datos.incidentes), [datos]);
   const alternar = (lista, setLista, valor) =>
@@ -53,6 +55,16 @@ export default function PaginaMapa() {
         </fieldset>
 
         <fieldset>
+          <legend>Franja horaria</legend>
+          {Object.entries(FRANJAS).map(([k, v]) => (
+            <label key={k} className="check">
+              <input type="checkbox" checked={franjas.includes(k)} onChange={() => alternar(franjas, setFranjas, k)} />
+              {v}
+            </label>
+          ))}
+        </fieldset>
+
+        <fieldset>
           <legend>Capas</legend>
           <label className="check">
             <input type="checkbox" checked={verCalor} onChange={() => setVerCalor(!verCalor)} /> Mapa de calor
@@ -62,11 +74,12 @@ export default function PaginaMapa() {
           </label>
         </fieldset>
 
-        {tipos.length > 0 && (
+        {(tipos.length > 0 || franjas.length > 0) && (
           <button
             className="btn secundario"
             onClick={() => {
               setTipos([]);
+              setFranjas([]);
             }}
           >
             Limpiar filtros
@@ -76,6 +89,9 @@ export default function PaginaMapa() {
         <p className="contador" aria-live="polite">
           {cargando ? 'Cargando…' : `${datos.total} incidentes en el mapa`}
         </p>
+        {!cargando && datos.total === 0 && franjas.length > 0 && (
+          <Aviso>Sin incidentes registrados en este horario.</Aviso>
+        )}
         <Aviso tipo="error">{error}</Aviso>
 
         <div className="leyenda">
