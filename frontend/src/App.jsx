@@ -5,7 +5,7 @@ import { api } from './api.js';
 import PaginaMapa from './pages/PaginaMapa.jsx';
 import PaginaReportar from './pages/PaginaReportar.jsx';
 import PaginaMisReportes from './pages/PaginaMisReportes.jsx';
-import { PaginaLogin, PaginaRegistro } from './pages/PaginasAuth.jsx';
+import { PaginaLogin, PaginaRegistro, PaginaRecuperar } from './pages/PaginasAuth.jsx';
 import PaginaBandeja from './pages/PaginaBandeja.jsx';
 
 function RutaProtegida({ roles, children }) {
@@ -92,6 +92,7 @@ export default function App() {
           <Route path="/reportar" element={<PaginaReportar />} />
           <Route path="/login" element={<PaginaLogin />} />
           <Route path="/registro" element={<PaginaRegistro />} />
+          <Route path="/recuperar" element={<PaginaRecuperar />} />
           <Route
             path="/mis-reportes"
             element={

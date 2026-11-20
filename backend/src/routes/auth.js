@@ -26,6 +26,8 @@ const esquemaLogin = z.object({
   password: z.string().min(1, 'La contraseña es obligatoria').max(72),
 });
 
+const esquemaRecuperar = z.object({ email: z.string().trim().toLowerCase().pipe(z.email('Correo no válido')) });
+
 module.exports = function rutasAuth(repo, { limites = true } = {}) {
   const r = express.Router();
   // Limita intentos de fuerza bruta sobre credenciales.
@@ -61,6 +63,19 @@ module.exports = function rutasAuth(repo, { limites = true } = {}) {
   );
 
   r.get('/me', requerirSesion, (req, res) => res.json({ usuario: req.usuario }));
+
+  // HU04 – Recuperar contraseña (respuesta idéntica exista o no la cuenta)
+  r.post(
+    '/recuperar',
+    limiteCredenciales,
+    asincrono(async (req, res) => {
+      const { email } = esquemaRecuperar.parse(req.body);
+      await repo.solicitarRecuperacion(email);
+      res.json({
+        mensaje: 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña (válido por 1 hora).',
+      });
+    }),
+  );
 
   return r;
 };
