@@ -4,6 +4,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { z } = require('zod');
 const { asincrono } = require('./util');
+const { requerirSesion } = require('../middleware/auth');
 const { sanitizarTexto } = require('../domain/texto');
 
 const esquemaRegistro = z.object({
@@ -18,6 +19,11 @@ const esquemaRegistro = z.object({
     .max(72, 'La contraseña no puede superar los 72 caracteres')
     .regex(/[A-Za-z]/, 'La contraseña debe incluir al menos una letra')
     .regex(/\d/, 'La contraseña debe incluir al menos un número'),
+});
+
+const esquemaLogin = z.object({
+  email: z.string().trim().toLowerCase().pipe(z.email('Correo no válido')),
+  password: z.string().min(1, 'La contraseña es obligatoria').max(72),
 });
 
 module.exports = function rutasAuth(repo, { limites = true } = {}) {
@@ -43,6 +49,18 @@ module.exports = function rutasAuth(repo, { limites = true } = {}) {
       res.status(201).json({ mensaje: 'Cuenta creada correctamente', usuario });
     }),
   );
+
+  // HU02 – Inicio de sesión
+  r.post(
+    '/login',
+    limiteCredenciales,
+    asincrono(async (req, res) => {
+      const { email, password } = esquemaLogin.parse(req.body);
+      res.json(await repo.iniciarSesion(email, password));
+    }),
+  );
+
+  r.get('/me', requerirSesion, (req, res) => res.json({ usuario: req.usuario }));
 
   return r;
 };
