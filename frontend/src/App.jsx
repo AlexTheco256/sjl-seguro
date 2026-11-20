@@ -4,6 +4,22 @@ import { useAuth } from './auth.jsx';
 import { api } from './api.js';
 import { PaginaLogin, PaginaRegistro } from './pages/PaginasAuth.jsx';
 
+function RutaProtegida({ roles, children }) {
+  const { usuario, cargando } = useAuth();
+  const ubicacion = useLocation();
+  if (cargando) return <p className="cargando">Cargando…</p>;
+  if (!usuario) return <Navigate to="/login" replace state={{ desde: ubicacion.pathname }} />;
+  if (roles && !roles.includes(usuario.rol)) {
+    return (
+      <section className="pagina estrecha">
+        <h1>Acceso denegado</h1>
+        <p>Tu rol no tiene permiso para ver esta sección.</p>
+      </section>
+    );
+  }
+  return children;
+}
+
 export default function App() {
   const { usuario, cerrarSesion } = useAuth();
   const [menu, setMenu] = useState(false);

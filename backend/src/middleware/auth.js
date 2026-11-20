@@ -28,4 +28,13 @@ function requerirSesion(req, _res, next) {
   return next();
 }
 
-module.exports = { autenticacionOpcional, requerirSesion, extraerToken };
+/** Exige uno de los roles indicados (HU03 – 403). */
+function requerirRol(...roles) {
+  return (req, _res, next) => {
+    if (!req.usuario) return next(new ErrorApp(401, 'Debes iniciar sesión'));
+    if (!roles.includes(req.usuario.rol)) return next(new ErrorApp(403, 'Acceso denegado'));
+    return next();
+  };
+}
+
+module.exports = { autenticacionOpcional, requerirSesion, requerirRol, extraerToken };
