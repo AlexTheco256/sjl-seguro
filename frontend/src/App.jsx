@@ -4,6 +4,7 @@ import { useAuth } from './auth.jsx';
 import { api } from './api.js';
 import PaginaMapa from './pages/PaginaMapa.jsx';
 import PaginaReportar from './pages/PaginaReportar.jsx';
+import PaginaMisReportes from './pages/PaginaMisReportes.jsx';
 import { PaginaLogin, PaginaRegistro } from './pages/PaginasAuth.jsx';
 import PaginaBandeja from './pages/PaginaBandeja.jsx';
 
@@ -48,6 +49,7 @@ export default function App() {
             Mapa de riesgo
           </NavLink>
           <NavLink to="/reportar">Reportar</NavLink>
+          {usuario && <NavLink to="/mis-reportes">Mis reportes</NavLink>}
           {esStaff && (
             <NavLink to="/serenazgo">
               Bandeja
@@ -69,6 +71,14 @@ export default function App() {
           <Route path="/reportar" element={<PaginaReportar />} />
           <Route path="/login" element={<PaginaLogin />} />
           <Route path="/registro" element={<PaginaRegistro />} />
+          <Route
+            path="/mis-reportes"
+            element={
+              <RutaProtegida>
+                <PaginaMisReportes />
+              </RutaProtegida>
+            }
+          />
           <Route
             path="/serenazgo"
             element={

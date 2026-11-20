@@ -3,6 +3,7 @@
 const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { asincrono } = require('./util');
+const { requerirSesion } = require('../middleware/auth');
 const { validarReporte, zonaMasCercana, franjaHoraria, esCritico } = require('../domain/reportes');
 const { ErrorApp } = require('../errores');
 const { erroresZod } = require('../middleware/errores');
@@ -50,6 +51,16 @@ module.exports = function rutasReportes(repo, { limites = true } = {}) {
         mensaje: `Reporte registrado con el número ${reporte.codigo}`,
         reporte: { ...reporte, franja: franjaHoraria(reporte.fechaHora), critico: esCritico(reporte.tipo) },
       });
+    }),
+  );
+
+  // HU08 – seguimiento de mis reportes
+  r.get(
+    '/mios',
+    requerirSesion,
+    asincrono(async (req, res) => {
+      const reportes = await repo.listarReportes({ usuarioId: req.usuario.id });
+      res.json({ total: reportes.length, reportes });
     }),
   );
 
