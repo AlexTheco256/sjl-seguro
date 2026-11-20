@@ -5,6 +5,7 @@ import { api } from './api.js';
 import PaginaMapa from './pages/PaginaMapa.jsx';
 import PaginaReportar from './pages/PaginaReportar.jsx';
 import { PaginaLogin, PaginaRegistro } from './pages/PaginasAuth.jsx';
+import PaginaBandeja from './pages/PaginaBandeja.jsx';
 
 function RutaProtegida({ roles, children }) {
   const { usuario, cargando } = useAuth();
@@ -47,6 +48,11 @@ export default function App() {
             Mapa de riesgo
           </NavLink>
           <NavLink to="/reportar">Reportar</NavLink>
+          {esStaff && (
+            <NavLink to="/serenazgo">
+              Bandeja
+            </NavLink>
+          )}
           {usuario ? (
             <button className="enlace" onClick={cerrarSesion}>
               Salir ({usuario.nombre.split(' ')[0]})
@@ -63,6 +69,14 @@ export default function App() {
           <Route path="/reportar" element={<PaginaReportar />} />
           <Route path="/login" element={<PaginaLogin />} />
           <Route path="/registro" element={<PaginaRegistro />} />
+          <Route
+            path="/serenazgo"
+            element={
+              <RutaProtegida roles={['serenazgo', 'administrador']}>
+                <PaginaBandeja />
+              </RutaProtegida>
+            }
+          />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
