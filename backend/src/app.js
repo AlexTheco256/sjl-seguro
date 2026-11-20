@@ -70,6 +70,7 @@ function crearApp({ repo, origenesCors = [], dirEstatico, limites = true, versio
 
   app.use('/api', autenticacionOpcional(repo));
   app.use('/api/auth', require('./routes/auth')(repo, { limites }));
+  app.use('/api/incidentes', require('./routes/incidentes')(repo));
   app.use('/api/reportes', require('./routes/reportes')(repo, { limites }));
   app.use('/api', noEncontrado);
 
