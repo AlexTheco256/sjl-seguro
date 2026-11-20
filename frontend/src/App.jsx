@@ -7,6 +7,7 @@ import PaginaReportar from './pages/PaginaReportar.jsx';
 import PaginaMisReportes from './pages/PaginaMisReportes.jsx';
 import { PaginaLogin, PaginaRegistro, PaginaRecuperar } from './pages/PaginasAuth.jsx';
 import PaginaBandeja from './pages/PaginaBandeja.jsx';
+import PaginaPanel from './pages/PaginaPanel.jsx';
 import PaginaUsuarios from './pages/PaginaUsuarios.jsx';
 
 function RutaProtegida({ roles, children }) {
@@ -77,6 +78,7 @@ export default function App() {
               Bandeja {alertas > 0 && <span className="insignia" title="Reportes críticos sin atender">{alertas}</span>}
             </NavLink>
           )}
+          {esStaff && <NavLink to="/panel">Panel</NavLink>}
           {usuario?.rol === 'administrador' && <NavLink to="/usuarios">Usuarios</NavLink>}
           {usuario ? (
             <button className="enlace" onClick={cerrarSesion}>
@@ -108,6 +110,14 @@ export default function App() {
             element={
               <RutaProtegida roles={['serenazgo', 'administrador']}>
                 <PaginaBandeja />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/panel"
+            element={
+              <RutaProtegida roles={['serenazgo', 'administrador']}>
+                <PaginaPanel />
               </RutaProtegida>
             }
           />
