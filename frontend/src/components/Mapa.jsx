@@ -1,5 +1,7 @@
 import { useEffect } from 'react';
 import { MapContainer, Rectangle, TileLayer, useMap } from 'react-leaflet';
+import L from './leafletGlobal.js';
+import 'leaflet.heat';
 import { CENTRO_SJL, LIMITES_SJL } from '../util.js';
 
 const LIMITES = [
@@ -34,6 +36,25 @@ export function MapaBase({ children, centro = CENTRO_SJL, zoom = 13, alto = '100
       {children}
     </MapContainer>
   );
+}
+
+/** Capa de mapa de calor (HU10). */
+export function CapaCalor({ puntos }) {
+  const mapa = useMap();
+  useEffect(() => {
+    const capa = L.heatLayer(puntos, {
+      radius: 28,
+      blur: 22,
+      maxZoom: 16,
+      minOpacity: 0.35,
+      gradient: { 0.2: '#22c55e', 0.45: '#facc15', 0.7: '#f97316', 1: '#dc2626' },
+    });
+    capa.addTo(mapa);
+    return () => {
+      mapa.removeLayer(capa);
+    };
+  }, [mapa, puntos]);
+  return null;
 }
 
 /** Recentra el mapa cuando cambian las coordenadas. */

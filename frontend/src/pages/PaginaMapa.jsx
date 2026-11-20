@@ -2,12 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CircleMarker, Popup } from 'react-leaflet';
 import { api } from '../api.js';
-import { MapaBase } from '../components/Mapa.jsx';
+import { CapaCalor, MapaBase } from '../components/Mapa.jsx';
 import { Aviso } from '../components/Ui.jsx';
 import { COLORES_TIPO, FRANJAS, TIPOS, formatoFecha, puntosCalor } from '../util.js';
 
 /** Mapa público de zonas de riesgo con filtros (HU09–HU12). */
 export default function PaginaMapa() {
+  const [verCalor, setVerCalor] = useState(true);
   const [verPuntos, setVerPuntos] = useState(true);
   const [datos, setDatos] = useState({ incidentes: [], total: 0 });
   const [error, setError] = useState('');
@@ -25,6 +26,7 @@ export default function PaginaMapa() {
       .finally(() => setCargando(false));
   }, []);
 
+  const puntos = useMemo(() => puntosCalor(datos.incidentes), [datos]);
   return (
     <div className="layout-mapa">
       <aside className="panel-lateral">
@@ -34,10 +36,26 @@ export default function PaginaMapa() {
           más hechos delictivos.
         </p>
 
+        <fieldset>
+          <legend>Capas</legend>
+          <label className="check">
+            <input type="checkbox" checked={verCalor} onChange={() => setVerCalor(!verCalor)} /> Mapa de calor
+          </label>
+          <label className="check">
+            <input type="checkbox" checked={verPuntos} onChange={() => setVerPuntos(!verPuntos)} /> Incidentes
+          </label>
+        </fieldset>
+
         <p className="contador" aria-live="polite">
           {cargando ? 'Cargando…' : `${datos.total} incidentes en el mapa`}
         </p>
         <Aviso tipo="error">{error}</Aviso>
+
+        <div className="leyenda">
+          <span>Menor riesgo</span>
+          <span className="gradiente" />
+          <span>Mayor riesgo</span>
+        </div>
 
         <Link to="/reportar" className="btn primario ancho">
           Reportar un incidente
@@ -46,6 +64,7 @@ export default function PaginaMapa() {
 
       <section className="contenedor-mapa">
         <MapaBase>
+          {verCalor && puntos.length > 0 && <CapaCalor puntos={puntos} />}
           {verPuntos &&
             datos.incidentes.map((i) => (
               <CircleMarker
