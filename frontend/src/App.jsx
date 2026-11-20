@@ -9,6 +9,7 @@ import { PaginaLogin, PaginaRegistro, PaginaRecuperar } from './pages/PaginasAut
 import PaginaBandeja from './pages/PaginaBandeja.jsx';
 import PaginaPanel from './pages/PaginaPanel.jsx';
 import PaginaUsuarios from './pages/PaginaUsuarios.jsx';
+import { etiquetaBotonTema, guardarTema, leerTemaGuardado, siguienteTema, temaInicial } from './tema.js';
 
 function RutaProtegida({ roles, children }) {
   const { usuario, cargando } = useAuth();
@@ -24,6 +25,22 @@ function RutaProtegida({ roles, children }) {
     );
   }
   return children;
+}
+
+/** Tema claro/oscuro con preferencia guardada (HU21). */
+function useTema() {
+  const [tema, setTema] = useState(() =>
+    temaInicial(leerTemaGuardado(), window.matchMedia?.('(prefers-color-scheme: dark)').matches),
+  );
+  useEffect(() => {
+    document.documentElement.dataset.theme = tema;
+  }, [tema]);
+  const alternar = () => {
+    const nuevo = siguienteTema(tema);
+    guardarTema(nuevo);
+    setTema(nuevo);
+  };
+  return [tema, alternar];
 }
 
 /** Contador de alertas críticas para el menú de serenazgo (HU16). */
@@ -52,6 +69,7 @@ export default function App() {
   const ubicacion = useLocation();
   const esStaff = usuario && ['serenazgo', 'administrador'].includes(usuario.rol);
   const alertas = useAlertas(esStaff);
+  const [tema, alternarTema] = useTema();
 
   useEffect(() => setMenu(false), [ubicacion.pathname]);
 
@@ -64,6 +82,14 @@ export default function App() {
             SJL <strong>Seguro</strong>
           </span>
         </NavLink>
+        <button
+          className="tema-btn"
+          onClick={alternarTema}
+          aria-label={etiquetaBotonTema(tema)}
+          title={etiquetaBotonTema(tema)}
+        >
+          {tema === 'oscuro' ? '☀️' : '🌙'}
+        </button>
         <button className="menu-btn" aria-expanded={menu} aria-label="Abrir menú" onClick={() => setMenu(!menu)}>
           ☰
         </button>
