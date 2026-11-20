@@ -8,6 +8,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 
+const { autenticacionOpcional } = require('./middleware/auth');
 const { noEncontrado, manejadorErrores } = require('./middleware/errores');
 
 /**
@@ -67,6 +68,7 @@ function crearApp({ repo, origenesCors = [], dirEstatico, limites = true, versio
     res.json({ estado: 'ok', servicio: 'sjl-seguro-api', version, commit, modo: repo.modo, hora: new Date().toISOString() });
   });
 
+  app.use('/api', autenticacionOpcional(repo));
   app.use('/api/auth', require('./routes/auth')(repo, { limites }));
   app.use('/api', noEncontrado);
 
