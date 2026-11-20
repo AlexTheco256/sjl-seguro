@@ -115,3 +115,41 @@ export function PaginaRegistro() {
     </section>
   );
 }
+
+/** HU04 – Recuperar contraseña. */
+export function PaginaRecuperar() {
+  const [email, setEmail] = useState('');
+  const [mensaje, setMensaje] = useState('');
+  const [error, setError] = useState('');
+
+  const enviar = async (e) => {
+    e.preventDefault();
+    setError('');
+    try {
+      const r = await api('/auth/recuperar', { metodo: 'POST', cuerpo: { email } });
+      setMensaje(r.mensaje);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  return (
+    <section className="pagina estrecha tarjeta">
+      <h1>Recuperar contraseña</h1>
+      {mensaje ? (
+        <Aviso tipo="exito">{mensaje}</Aviso>
+      ) : (
+        <form onSubmit={enviar}>
+          <Campo etiqueta="Correo electrónico">
+            <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          </Campo>
+          <Aviso tipo="error">{error}</Aviso>
+          <button className="btn primario ancho">Enviar enlace</button>
+        </form>
+      )}
+      <p className="enlaces">
+        <Link to="/login">Volver a ingresar</Link>
+      </p>
+    </section>
+  );
+}
