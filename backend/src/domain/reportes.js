@@ -80,6 +80,13 @@ const esquemaReporte = z
     anonimo: z.boolean({ error: 'El campo anónimo debe ser verdadero o falso' }).default(false),
   })
   .superRefine((r, ctx) => {
+    if (!dentroDeSJL(r.lat, r.lng)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['lat'],
+        message: 'La ubicación debe estar dentro de San Juan de Lurigancho',
+      });
+    }
     if (r.fechaHora.getTime() > Date.now() + 5 * 60 * 1000) {
       ctx.addIssue({
         code: 'custom',

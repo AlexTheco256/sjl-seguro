@@ -35,3 +35,12 @@ export function MapaBase({ children, centro = CENTRO_SJL, zoom = 13, alto = '100
     </MapContainer>
   );
 }
+
+/** Recentra el mapa cuando cambian las coordenadas. */
+export function Recentrar({ centro, zoom }) {
+  const mapa = useMap();
+  useEffect(() => {
+    if (centro) mapa.setView(centro, zoom ?? mapa.getZoom());
+  }, [mapa, centro, zoom]);
+  return null;
+}

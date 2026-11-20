@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { CircleMarker, useMapEvents } from 'react-leaflet';
 import { api, erroresPorCampo } from '../api.js';
 import { useAuth } from '../auth.jsx';
-import { MapaBase } from '../components/Mapa.jsx';
+import { MapaBase, Recentrar } from '../components/Mapa.jsx';
 import { Aviso, Campo } from '../components/Ui.jsx';
 import { TIPOS, ahoraLocalInput, dentroDeSJL, localLimaAIso, validarFormularioReporte } from '../util.js';
 
@@ -17,12 +17,33 @@ export default function PaginaReportar() {
   const { usuario } = useAuth();
   const [form, setForm] = useState({ tipo: '', descripcion: '', fechaHora: ahoraLocalInput(), anonimo: false });
   const [punto, setPunto] = useState(null);
+  const [centrar, setCentrar] = useState(null);
   const [errores, setErrores] = useState({});
   const [estado, setEstado] = useState({ enviando: false, exito: null, error: '' });
   const anonimo = false;
 
   const cambiar = (campo) => (e) =>
     setForm({ ...form, [campo]: e.target.type === 'checkbox' ? e.target.checked : e.target.value });
+
+  const usarUbicacion = () => {
+    if (!navigator.geolocation) {
+      setErrores({ ...errores, ubicacion: 'Tu navegador no permite obtener la ubicación' });
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const p = [pos.coords.latitude, pos.coords.longitude];
+        setPunto(p);
+        setCentrar(p);
+        setErrores({
+          ...errores,
+          ubicacion: dentroDeSJL(p[0], p[1]) ? undefined : 'Tu ubicación actual está fuera de San Juan de Lurigancho',
+        });
+      },
+      () => setErrores({ ...errores, ubicacion: 'No se pudo obtener tu ubicación; márcala en el mapa' }),
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
 
   const enviar = async (e) => {
     e.preventDefault();
@@ -122,10 +143,14 @@ export default function PaginaReportar() {
         <div className="col">
           <div className="fila-mapa">
             <span className="campo-etiqueta">Ubicación: haz clic en el mapa</span>
+            <button type="button" className="btn secundario chico" onClick={usarUbicacion}>
+              📍 Usar mi ubicación
+            </button>
           </div>
           <div className={`mapa-selector ${errores.ubicacion ? 'campo-error' : ''}`}>
             <MapaBase zoom={13} alto="380px">
               <SelectorPunto onSeleccion={(p) => { setPunto(p); setErrores({ ...errores, ubicacion: undefined }); }} />
+              {centrar && <Recentrar centro={centrar} zoom={16} />}
               {punto && (
                 <CircleMarker center={punto} radius={9} pathOptions={{ color: '#fff', weight: 2, fillColor: '#dc2626', fillOpacity: 1 }} />
               )}
