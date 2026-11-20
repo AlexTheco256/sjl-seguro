@@ -19,6 +19,24 @@ export default function PaginaPanel() {
       .catch((e) => setError(e.message));
   }, [rango]);
 
+  const exportar = async () => {
+    const q = new URLSearchParams();
+    if (rango.desde) q.set('desde', rango.desde);
+    if (rango.hasta) q.set('hasta', rango.hasta);
+    try {
+      const res = await api(`/estadisticas/exportar.csv?${q}`, { crudo: true });
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `reportes-sjl-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setError(e.message);
+    }
+  };
+
   const t = datos?.totales;
   return (
     <section className="pagina ancha">
@@ -31,6 +49,9 @@ export default function PaginaPanel() {
           <label>
             Hasta <input type="date" value={rango.hasta} onChange={(e) => setRango({ ...rango, hasta: e.target.value })} />
           </label>
+          <button className="btn primario chico" onClick={exportar}>
+            ⬇ Exportar CSV
+          </button>
         </div>
       </div>
       <Aviso tipo="error">{error}</Aviso>
