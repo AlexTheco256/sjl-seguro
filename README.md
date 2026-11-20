@@ -6,7 +6,7 @@ los reportes, y la municipalidad ve en un panel qué zonas y horarios concentran
 
 | Recurso | Enlace |
 |---|---|
-| Aplicación desplegada | _se completa al desplegar en Render_ |
+| Aplicación desplegada | https://sjl-seguro.onrender.com |
 | Proyecto Jira (backlog y sprints) | https://axel27136.atlassian.net/jira/software/projects/P2/boards/34/backlog |
 | Pipeline CI/CD | pestaña **Actions** de este repositorio |
 
