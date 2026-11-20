@@ -8,6 +8,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 
+const { autenticacionOpcional } = require('./middleware/auth');
 const { noEncontrado, manejadorErrores } = require('./middleware/errores');
 
 /**
@@ -67,7 +68,13 @@ function crearApp({ repo, origenesCors = [], dirEstatico, limites = true, versio
     res.json({ estado: 'ok', servicio: 'sjl-seguro-api', version, commit, modo: repo.modo, hora: new Date().toISOString() });
   });
 
+  app.use('/api', autenticacionOpcional(repo));
   app.use('/api/auth', require('./routes/auth')(repo, { limites }));
+  app.use('/api/incidentes', require('./routes/incidentes')(repo));
+  app.use('/api/reportes', require('./routes/reportes')(repo, { limites }));
+  app.use('/api/serenazgo', require('./routes/serenazgo')(repo));
+  app.use('/api/estadisticas', require('./routes/estadisticas')(repo));
+  app.use('/api/admin', require('./routes/admin')(repo));
   app.use('/api', noEncontrado);
 
   // Frontend compilado (React) servido por el mismo servicio.

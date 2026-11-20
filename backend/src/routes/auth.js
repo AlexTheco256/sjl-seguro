@@ -4,6 +4,7 @@ const express = require('express');
 const rateLimit = require('express-rate-limit');
 const { z } = require('zod');
 const { asincrono } = require('./util');
+const { requerirSesion } = require('../middleware/auth');
 const { sanitizarTexto } = require('../domain/texto');
 
 const esquemaRegistro = z.object({
@@ -19,6 +20,13 @@ const esquemaRegistro = z.object({
     .regex(/[A-Za-z]/, 'La contraseña debe incluir al menos una letra')
     .regex(/\d/, 'La contraseña debe incluir al menos un número'),
 });
+
+const esquemaLogin = z.object({
+  email: z.string().trim().toLowerCase().pipe(z.email('Correo no válido')),
+  password: z.string().min(1, 'La contraseña es obligatoria').max(72),
+});
+
+const esquemaRecuperar = z.object({ email: z.string().trim().toLowerCase().pipe(z.email('Correo no válido')) });
 
 module.exports = function rutasAuth(repo, { limites = true } = {}) {
   const r = express.Router();
@@ -41,6 +49,31 @@ module.exports = function rutasAuth(repo, { limites = true } = {}) {
       const datos = esquemaRegistro.parse(req.body);
       const usuario = await repo.registrar(datos);
       res.status(201).json({ mensaje: 'Cuenta creada correctamente', usuario });
+    }),
+  );
+
+  // HU02 – Inicio de sesión
+  r.post(
+    '/login',
+    limiteCredenciales,
+    asincrono(async (req, res) => {
+      const { email, password } = esquemaLogin.parse(req.body);
+      res.json(await repo.iniciarSesion(email, password));
+    }),
+  );
+
+  r.get('/me', requerirSesion, (req, res) => res.json({ usuario: req.usuario }));
+
+  // HU04 – Recuperar contraseña (respuesta idéntica exista o no la cuenta)
+  r.post(
+    '/recuperar',
+    limiteCredenciales,
+    asincrono(async (req, res) => {
+      const { email } = esquemaRecuperar.parse(req.body);
+      await repo.solicitarRecuperacion(email);
+      res.json({
+        mensaje: 'Si el correo está registrado, recibirás un enlace para restablecer tu contraseña (válido por 1 hora).',
+      });
     }),
   );
 
