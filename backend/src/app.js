@@ -73,6 +73,7 @@ function crearApp({ repo, origenesCors = [], dirEstatico, limites = true, versio
   app.use('/api/incidentes', require('./routes/incidentes')(repo));
   app.use('/api/reportes', require('./routes/reportes')(repo, { limites }));
   app.use('/api/serenazgo', require('./routes/serenazgo')(repo));
+  app.use('/api/admin', require('./routes/admin')(repo));
   app.use('/api', noEncontrado);
 
   // Frontend compilado (React) servido por el mismo servicio.

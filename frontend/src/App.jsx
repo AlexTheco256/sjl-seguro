@@ -7,6 +7,7 @@ import PaginaReportar from './pages/PaginaReportar.jsx';
 import PaginaMisReportes from './pages/PaginaMisReportes.jsx';
 import { PaginaLogin, PaginaRegistro, PaginaRecuperar } from './pages/PaginasAuth.jsx';
 import PaginaBandeja from './pages/PaginaBandeja.jsx';
+import PaginaUsuarios from './pages/PaginaUsuarios.jsx';
 
 function RutaProtegida({ roles, children }) {
   const { usuario, cargando } = useAuth();
@@ -76,6 +77,7 @@ export default function App() {
               Bandeja {alertas > 0 && <span className="insignia" title="Reportes críticos sin atender">{alertas}</span>}
             </NavLink>
           )}
+          {usuario?.rol === 'administrador' && <NavLink to="/usuarios">Usuarios</NavLink>}
           {usuario ? (
             <button className="enlace" onClick={cerrarSesion}>
               Salir ({usuario.nombre.split(' ')[0]})
@@ -106,6 +108,14 @@ export default function App() {
             element={
               <RutaProtegida roles={['serenazgo', 'administrador']}>
                 <PaginaBandeja />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/usuarios"
+            element={
+              <RutaProtegida roles={['administrador']}>
+                <PaginaUsuarios />
               </RutaProtegida>
             }
           />
