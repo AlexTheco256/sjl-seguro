@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useLocation } from 'react-router-dom';
 import { useAuth } from './auth.jsx';
 import { api } from './api.js';
+import PaginaReportar from './pages/PaginaReportar.jsx';
 import { PaginaLogin, PaginaRegistro } from './pages/PaginasAuth.jsx';
 
 function RutaProtegida({ roles, children }) {
@@ -41,6 +42,7 @@ export default function App() {
           ☰
         </button>
         <nav className={`nav ${menu ? 'abierto' : ''}`}>
+          <NavLink to="/reportar">Reportar</NavLink>
           {usuario ? (
             <button className="enlace" onClick={cerrarSesion}>
               Salir ({usuario.nombre.split(' ')[0]})
@@ -53,6 +55,7 @@ export default function App() {
 
       <main>
         <Routes>
+          <Route path="/reportar" element={<PaginaReportar />} />
           <Route path="/login" element={<PaginaLogin />} />
           <Route path="/registro" element={<PaginaRegistro />} />
           <Route path="*" element={<Navigate to="/" replace />} />
